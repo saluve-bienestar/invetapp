@@ -30,7 +30,7 @@ input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--acc);out
 .btn.w{width:100%;margin-top:16px}
 .err{color:var(--warn);font-weight:600;margin-top:10px;min-height:20px}
 header{background:var(--pri);color:#fff;display:flex;align-items:center;gap:14px;padding:10px 20px;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
-header img{width:44px;height:44px;border-radius:50%}
+header img{width:56px;height:56px;border-radius:50%;border:2px solid #62E5CF;background:#12403A}
 header b{font-weight:800;font-size:18px}
 nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
 nav button{background:transparent;border:0;color:#cfe;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600}
@@ -67,6 +67,30 @@ tr:last-child td{border-bottom:0}
 .empty{padding:30px;text-align:center;color:var(--mut)}
 @media(max-width:560px){.det,.row2{grid-template-columns:1fr}.kv{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:no-preference){.modal{animation:up .18s ease-out}@keyframes up{from{transform:translateY(10px);opacity:0}}}
+
+.pager{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px}
+.pgb{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;min-width:38px}
+.pgb.on{background:var(--pri);color:var(--card);border-color:var(--pri)}.pgb:disabled{opacity:.4;cursor:default}
+.pgi{text-align:center;color:var(--mut);font-size:12px}.pgd{align-self:center;color:var(--mut)}
+@media(max-width:700px){
+header{padding:10px 12px;gap:8px 10px}header img{width:64px;height:64px}header b{font-size:22px;flex:1}
+.who{flex-basis:100%;justify-content:space-between;order:2}
+nav{order:3;flex:1 1 100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+nav button{padding:10px 2px;font-size:13px;text-align:center}
+main{padding:14px 12px}
+.top h2{flex:1 1 100%}.top #q{max-width:none!important;flex:1 1 100%}.top .btn{flex:1}
+.tw{background:transparent;overflow:visible}
+table.rt{min-width:0!important}
+table.rt thead{display:none}
+table.rt,table.rt tbody,table.rt tr,table.rt td{display:block;width:100%}
+table.rt tr{background:var(--card);border-radius:14px;padding:10px 14px;margin-bottom:10px}
+table.rt td{border:0;padding:4px 0;display:flex;gap:10px;justify-content:space-between;align-items:center;text-align:right}
+table.rt td::before{content:attr(data-l);color:var(--mut);font-weight:600;font-size:12px;text-align:left;flex:0 0 36%}
+table.rt td[data-l=""]::before{display:none}
+table.rt td:first-child{justify-content:flex-start}
+table.rt td.empty{justify-content:center}
+.acts{justify-content:flex-end}
+}
 </style></head><body>
 <section id="login"><form class="lcard" id="lf" autocomplete="on">
 <img class="lg" alt="Saluvé"><h1>Inventario Saluvé</h1><p>Ingresa con tu usuario</p>
@@ -119,16 +143,16 @@ function start(){if(!ME||!USERS[ME])return;$('#login').classList.add('hidden');$
 const who=()=>USERS[ME].name;
 const thumb=p=>p.img?`<img class="th" src="${p.img}" alt="">`:`<div class="ph">${esc(p.name[0])}</div>`;
 const filt=()=>DB.filter(p=>(p.name+p.code+p.supplier+p.desc).toLowerCase().includes(Q.toLowerCase()));
-function search(){return `<input style="max-width:240px" placeholder="Buscar producto…" value="${esc(Q)}" oninput="Q=this.value;(TAB==='prod'?renderProd:renderInv)(true)" id="q">`}
+function search(){return `<input style="max-width:240px" placeholder="Buscar producto…" value="${esc(Q)}" oninput="Q=this.value;PG[TAB]=1;(TAB==='prod'?renderProd:renderInv)(true)" id="q">`}
 function keepFocus(k){if(k){const q=$('#q');q.focus();q.setSelectionRange(Q.length,Q.length)}}
 
 /* ---------- PRODUCTOS ---------- */
-function renderProd(k){const L=filt();
+function renderProd(k){const A=filt(),L=pg('prod',A);
 $('#main').innerHTML=`<div class="top"><h2>Productos</h2>${search()}<button class="btn s" onclick="xlsAll()">Excel</button><button class="btn s" onclick="pdfAll()">PDF</button><button class="btn" onclick="formP()">+ Nuevo producto</button></div>
 <div class="tw"><table><thead><tr><th></th><th>Código</th><th>Producto</th><th>Contenido</th><th>Proveedor</th><th>V. unidad</th><th>V. venta</th><th>Acciones</th></tr></thead><tbody>
 ${L.map(p=>`<tr><td>${thumb(p)}</td><td class="code">${esc(p.code)}</td><td><b>${esc(p.name)}</b></td><td>${esc(p.content)}</td><td>${esc(p.supplier)||'—'}</td><td>${cop(p.cost)}</td><td>${cop(p.price)}</td>
 <td><div class="acts"><button class="btn s m" onclick="viewP('${p.id}')">Ver</button><button class="btn s m" onclick="formP('${p.id}')">Editar</button><button class="btn s m" onclick="pdfOne('${p.id}')">PDF</button></div></td></tr>`).join('')||''}
-</tbody></table>${L.length?'':'<div class="empty">No hay productos que coincidan. Crea uno con “Nuevo producto”.</div>'}</div>`;keepFocus(k)}
+</tbody></table>${L.length?'':'<div class="empty">No hay productos que coincidan. Crea uno con “Nuevo producto”.</div>'}</div>${pager('prod','renderProd')}`;keepFocus(k)}
 function modal(h){$('#ov').innerHTML=`<div class="mask" onclick="if(event.target===this)closeM()"><div class="modal" role="dialog" aria-modal="true">${h}</div></div>`}
 const closeM=()=>$('#ov').innerHTML='';
 function info(p){return `<div class="det">${p.img?`<img src="${p.img}" alt="">`:`<div class="ph big">${esc(p.name[0])}</div>`}<div><span class="code">${esc(p.code)}</span><h3 style="margin:2px 0 4px">${esc(p.name)}</h3><div style="color:var(--mut)">${esc(p.desc)}</div></div></div>
@@ -153,12 +177,12 @@ $('#pf').onsubmit=e=>{e.preventDefault();const code=$('#f_code').value.trim().to
 
 /* ---------- INVENTARIO ---------- */
 const LOW=2;
-function renderInv(k){const L=filt(),tot=DB.reduce((a,p)=>a+(+p.stock||0),0),low=DB.filter(p=>p.stock<=LOW).length;
+function renderInv(k){const A=filt(),L=pg('inv',A),tot=DB.reduce((a,p)=>a+(+p.stock||0),0),low=DB.filter(p=>p.stock<=LOW).length;
 $('#main').innerHTML=`<div class="top"><h2>Inventario</h2>${search()}<button class="btn s" onclick="xlsInv()">Excel</button></div>
 <div class="stats"><div class="stat"><b>${DB.length}</b><span>Productos creados</span></div><div class="stat"><b>${tot}</b><span>Unidades en stock</span></div><div class="stat"><b>${low}</b><span>Con stock bajo (≤${LOW})</span></div></div>
 <div class="tw"><table><thead><tr><th></th><th>Producto</th><th>Descripción</th><th>Stock</th><th></th></tr></thead><tbody>
 ${L.map(p=>`<tr><td>${thumb(p)}</td><td><span class="code">${esc(p.code)}</span><br><b>${esc(p.name)}</b></td><td>${esc(p.desc.length>70?p.desc.slice(0,70)+'…':p.desc)}</td><td><span class="tag ${p.stock<=LOW?'low':'ok'}">${p.stock} u.</span></td><td><button class="btn s m" onclick="invP('${p.id}')">Ver más</button></td></tr>`).join('')}
-</tbody></table>${L.length?'':'<div class="empty">No hay productos que coincidan.</div>'}</div>`;keepFocus(k)}
+</tbody></table>${L.length?'':'<div class="empty">No hay productos que coincidan.</div>'}</div>${pager('inv','renderInv')}`;keepFocus(k)}
 function invP(id){const p=DB.find(x=>x.id===id);
 modal(info(p)+`<hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><form id="if"><div class="row2"><div><label>Cantidad en stock</label><input id="i_s" type="number" min="0" step="1" value="${p.stock}" required></div><div></div></div>
 <label>Observaciones (cortas)</label><input id="i_o" maxlength="140" value="${esc(p.obs)}" placeholder="Ej: lote vence en 2027"><div class="mf"><button type="button" class="btn s" onclick="closeM()">Cerrar</button><button class="btn" type="submit">Guardar inventario</button></div></form>`);
@@ -185,17 +209,17 @@ const LS=()=>SALES.filter(s=>(!F.from||s.date>=F.from)&&(!F.to||s.date<=F.to)).s
 const recv=s=>s.method==='credito'?Math.round(s.total*Math.min(s.paid,s.cuotas)/s.cuotas):s.total,uds=s=>s.items.reduce((a,i)=>a+i.qty,0),fd=d=>d.split('-').reverse().join('/');
 const pay=s=>s.method==='credito'?`Crédito · ${s.paid}/${s.cuotas} cuotas`:ML[s.method],lines=s=>s.items.map(i=>i.qty+'× '+i.name).join(', ');
 function wk(s){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d)}
-function dbar(fn){return `<div class="top" style="font-size:12px"><b>Desde</b><input type="date" style="max-width:150px" value="${F.from}" onchange="F.from=this.value;${fn}()"><b>Hasta</b><input type="date" style="max-width:150px" value="${F.to}" onchange="F.to=this.value;${fn}()"><b>Mes</b><input type="month" style="max-width:150px" value="${F.from.slice(0,7)}" onchange="setM(this.value,'${fn}')"></div>`}
-function setM(v,fn){if(!v)return;const[y,m]=v.split('-').map(Number);F={from:ymd(new Date(y,m-1,1)),to:ymd(new Date(y,m,0))};window[fn]()}
+function dbar(fn){return `<div class="top" style="font-size:12px"><b>Desde</b><input type="date" style="max-width:150px" value="${F.from}" onchange="PG.ven=1;F.from=this.value;${fn}()"><b>Hasta</b><input type="date" style="max-width:150px" value="${F.to}" onchange="PG.ven=1;F.to=this.value;${fn}()"><b>Mes</b><input type="month" style="max-width:150px" value="${F.from.slice(0,7)}" onchange="setM(this.value,'${fn}')"></div>`}
+function setM(v,fn){if(!v)return;PG.ven=1;const[y,m]=v.split('-').map(Number);F={from:ymd(new Date(y,m-1,1)),to:ymd(new Date(y,m,0))};window[fn]()}
 const stat=(b,l)=>`<div class="stat"><b>${b}</b><span>${l}</span></div>`;
 function tbl(t){return `<h3 style="margin:14px 0 6px">${t.t}</h3><div class="tw" style="margin-bottom:6px"><table style="min-width:0"><thead><tr>${t.h.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${t.r.map(r=>`<tr>${r.map((c,i)=>`<td>${t.m.includes(i)?cop(c):esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${t.h.length}" class="empty">Sin datos en este periodo</td></tr>`}</tbody></table></div>`}
-function renderVen(){const L=LS(),W={};SALES.forEach(s=>{const k=wk(s.date);W[k]=W[k]||{u:0,t:0,n:0};W[k].u+=uds(s);W[k].t+=s.total;W[k].n++});
+function renderVen(){const A=LS(),L=pg('ven',A),W={};SALES.forEach(s=>{const k=wk(s.date);W[k]=W[k]||{u:0,t:0,n:0};W[k].u+=uds(s);W[k].t+=s.total;W[k].n++});
 const wks=Object.keys(W).sort().reverse().slice(0,4),tw=W[wk(ymd(NOW))]||{u:0};
 $('#main').innerHTML=`<div class="top"><h2>Ventas</h2><button class="btn s" onclick="xlsV()">Excel</button><button class="btn s" onclick="pdfV()">PDF</button><button class="btn" onclick="formV()">+ Nueva venta</button></div>
-<div class="stats">${stat(DB.length,'Productos en base de datos')}${stat(DB.reduce((a,p)=>a+p.stock,0),'Unidades en stock')}${stat(tw.u,'Unidades vendidas esta semana')}${stat(cop(L.reduce((a,s)=>a+s.total,0)),'Dinero esperado (periodo)')}</div>
+<div class="stats">${stat(DB.length,'Productos en base de datos')}${stat(DB.reduce((a,p)=>a+p.stock,0),'Unidades en stock')}${stat(tw.u,'Unidades vendidas esta semana')}${stat(cop(A.reduce((a,s)=>a+s.total,0)),'Dinero esperado (periodo)')}</div>
 ${tbl({t:'Ventas por semana',h:['Semana (lunes)','Ventas','Unidades','Esperado'],m:[3],r:wks.map(k=>[fd(k),W[k].n,W[k].u,W[k].t])})}
 ${dbar('renderVen')}<div class="tw"><table><thead><tr><th>Fecha</th><th>Productos</th><th>Total</th><th>Pago</th><th>Vendedor</th><th>Recibe</th><th>Acciones</th></tr></thead><tbody>
-${L.map(s=>`<tr><td>${fd(s.date)}</td><td>${esc(lines(s))}${s.client?`<br><small style="color:var(--mut)">${esc(s.client)}</small>`:''}</td><td><b>${cop(s.total)}</b></td><td>${esc(pay(s))}</td><td>${esc(un(s.seller))}</td><td>${esc(un(s.receiver))}</td><td><div class="acts"><button class="btn s m" onclick="formV('${s.id}')">Editar</button><button class="btn s m" onclick="askDel('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table>${L.length?'':'<div class="empty">No hay ventas en este rango de fechas.</div>'}</div>`}
+${L.map(s=>`<tr><td>${fd(s.date)}</td><td>${esc(lines(s))}${s.client?`<br><small style="color:var(--mut)">${esc(s.client)}</small>`:''}</td><td><b>${cop(s.total)}</b></td><td>${esc(pay(s))}</td><td>${esc(un(s.seller))}</td><td>${esc(un(s.receiver))}</td><td><div class="acts"><button class="btn s m" onclick="formV('${s.id}')">Editar</button><button class="btn s m" onclick="askDel('${s.id}')">Eliminar</button></div></td></tr>`).join('')}</tbody></table>${L.length?'':'<div class="empty">No hay ventas en este rango de fechas.</div>'}</div>${pager('ven','renderVen')}`}
 let CART=[];
 function formV(id){const o=id?SALES.find(x=>x.id===id):null;CART=o?o.items.map(i=>({...i})):[];const us=Object.keys(USERS),sel=(i,v)=>`<select id="${i}">${us.map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(USERS[k].name)}</option>`).join('')}</select>`;
 modal(`<h3>${o?'Editar venta':'Nueva venta'}</h3><form id="vf"><div class="row2"><div><label>Fecha</label><input id="v_d" type="date" value="${o?o.date:ymd(NOW)}" required></div><div><label>Cliente (opcional)</label><input id="v_cl" value="${esc(o?o.client:'')}"></div></div>
@@ -236,5 +260,13 @@ function xlsC(){const{k,T}=cajaT(),wb=XLSX.utils.book_new();XLSX.utils.book_appe
 function pdfC(){const{k,T}=cajaT(),d=new jspdf.jsPDF();head(d,'Caja');d.setFontSize(10);d.text(`Periodo: ${fd(F.from)} al ${fd(F.to)}`,14,30);d.text(`Ventas: ${k.S.length}   Esperado: ${cop(k.e)}   Recibido: ${cop(k.r)}   Por cobrar: ${cop(k.e-k.r)}   Ganancia est.: ${cop(k.g)}`,14,37,{maxWidth:182});let y=44;
 T.forEach(t=>{d.autoTable({startY:y,head:[t.h],body:t.r.map(r=>r.map((c,i)=>t.m.includes(i)?cop(c):c)),headStyles:{fillColor:[18,64,58]},styles:{fontSize:8},didDrawPage:()=>{}});d.setFontSize(10);y=d.lastAutoTable.finalY+8});d.save(`Saluve_Caja_${F.from}_${F.to}.pdf`)}
 document.querySelectorAll('img.lg').forEach(i=>i.src=LOGO);
+const PS=20,PG={prod:1,inv:1,ven:1},PGN={};
+function pg(k,A){PGN[k]=A.length;const n=Math.max(1,Math.ceil(A.length/PS));if(PG[k]>n)PG[k]=n;return A.slice((PG[k]-1)*PS,PG[k]*PS)}
+function goP(k,fn,n){PG[k]=n;window[fn]();window.scrollTo({top:0,behavior:'smooth'})}
+function pager(k,fn){const N=PGN[k]||0,n=Math.ceil(N/PS);if(n<2)return N?`<div class="pgi">${N} resultado${N>1?'s':''}</div>`:'';const c=PG[k];let h='',l=0;
+[...new Set([1,n,c-1,c,c+1])].filter(x=>x>=1&&x<=n).sort((a,b)=>a-b).forEach(x=>{if(l&&x-l>1)h+='<span class="pgd">…</span>';h+=`<button class="pgb${x===c?' on':''}" onclick="goP('${k}','${fn}',${x})">${x}</button>`;l=x});
+return `<div class="pager"><button class="pgb" ${c<2?'disabled':''} onclick="goP('${k}','${fn}',${c-1})">‹ Anterior</button>${h}<button class="pgb" ${c>=n?'disabled':''} onclick="goP('${k}','${fn}',${c+1})">Siguiente ›</button></div><div class="pgi">Mostrando ${(c-1)*PS+1}–${Math.min(c*PS,N)} de ${N}</div>`}
+function cards(){document.querySelectorAll('.tw table').forEach(t=>{t.classList.add('rt');const h=[...t.querySelectorAll('th')].map(x=>x.textContent);t.querySelectorAll('tbody tr').forEach(r=>[...r.children].forEach((c,i)=>c.dataset.l=c.colSpan>1?'':(h[i]||'')))})}
+new MutationObserver(cards).observe($('#main'),{childList:true,subtree:true});
 (async()=>{const{data}=await sb.auth.getSession(),em=data.session&&data.session.user.email;ME=Object.keys(CFG.emails).find(k=>CFG.emails[k]===em)||null;if(ME)await boot()})();
 </script></body></html>
